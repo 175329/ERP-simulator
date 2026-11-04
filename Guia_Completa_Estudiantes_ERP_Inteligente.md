@@ -9,7 +9,7 @@
 
 Este proyecto integra conocimientos de Sistemas ERP, Bases de Datos e Inteligencia Artificial para construir un simulador empresarial inspirado en SAP Business One.
 
-El propósito no es replicar un ERP completo, sino desarrollar un MVP capaz de automatizar procesos de negocio mediante GitHub Actions y agentes inteligentes.
+El propósito no es replicar un ERP completo, sino desarrollar un MVP (Minimum Viable Product) capaz de automatizar procesos de negocio mediante GitHub Actions y agentes inteligentes.
 
 ---
 
