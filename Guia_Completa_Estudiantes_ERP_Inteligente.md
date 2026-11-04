@@ -150,7 +150,7 @@ El agente MRP genera órdenes de compra.
 ## Actividades
 
 - Definir requerimientos.
-- Elaborar BPMN.
+- Elaborar BPMN (Business Process Model and Notation o Modelo y Notación de Procesos de Negocio).
 - Diseñar casos de uso.
 - Definir KPI.
 - Validar funcionalidad.
