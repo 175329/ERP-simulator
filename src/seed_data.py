@@ -1,5 +1,5 @@
-import psycopg2
 import os
+import psycopg2
 
 quantity = int(
     os.getenv(
@@ -9,20 +9,56 @@ quantity = int(
 )
 
 conn = psycopg2.connect(
-    host="localhost",
-    database="erpdb",
-    user="erp",
-    password="erp"
+    host=os.getenv("POSTGRES_HOST", "localhost"),
+    port=os.getenv("POSTGRES_PORT", "5432"),
+    database=os.getenv("POSTGRES_DB", "erpdb"),
+    user=os.getenv("POSTGRES_USER", "erp"),
+    password=os.getenv("POSTGRES_PASSWORD", "erp")
 )
 
 cursor = conn.cursor()
 
-with open("sql/seed.sql", "r") as f:
-    cursor.execute(f.read())
+# --------------------------------------------------
+# Cargar datos maestros
+# --------------------------------------------------
+
+with open("sql/seed.sql", "r", encoding="utf-8") as sql_file:
+
+    cursor.execute(sql_file.read())
+
+# --------------------------------------------------
+# Crear orden de venta dinámica
+# --------------------------------------------------
+
+cursor.execute(
+    """
+    INSERT INTO sales_orders
+    (
+        product_id,
+        quantity
+    )
+    VALUES
+    (
+        %s,
+        %s
+    )
+    """,
+    (
+        1,
+        quantity
+    )
+)
 
 conn.commit()
 
+print()
+print("========================================")
+print("MASTER DATA LOADED")
+print("========================================")
+print(f"Gaming PCs Requested : {quantity}")
+print("Sales Order Created  : OK")
+print("========================================")
+print()
+
 cursor.close()
 conn.close()
-
-print("Seed data loaded")
