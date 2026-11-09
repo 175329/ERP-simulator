@@ -1,7 +1,11 @@
 name: ERP Computer Assembly Demo
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      order_quantity:
+        description: "Cantidad de Gaming PCs"
+        required: true
+        default: "30"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,30 +17,40 @@ jobs:
           POSTGRES_DB: erpdb
           POSTGRES_USER: erp
           POSTGRES_PASSWORD: erp
+
         ports:
           - 5432:5432
+
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+
       mongodb:
+
         image: mongo:8
         ports:
           - 27017:27017
+
       neo4j:
         image: neo4j:5
         env:
           NEO4J_AUTH: neo4j/password
+
         ports:
           - 7474:7474
           - 7687:7687
+
+    env:
+      ORDER_QUANTITY: ${{ github.event.inputs.order_quantity }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
+
         with:
           python-version: "3.12"
 
@@ -57,7 +71,7 @@ jobs:
         run: |
           python src/seed_data.py
 
-      - name: Run MRP Validation
+      - name: Execute MRP Validation
         run: |
           python src/check_shortages.py
 
