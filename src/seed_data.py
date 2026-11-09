@@ -1,4 +1,12 @@
 import psycopg2
+import os
+
+quantity = int(
+    os.getenv(
+        "ORDER_QUANTITY",
+        "30"
+    )
+)
 
 conn = psycopg2.connect(
     host="localhost",
