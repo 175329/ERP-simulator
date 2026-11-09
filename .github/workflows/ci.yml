@@ -33,7 +33,7 @@ jobs:
           - 27017:27017
 
       neo4j:
-        image: neo4j:5
+        image: neo4j:5.26-community
         env:
           NEO4J_AUTH: neo4j/password
 
@@ -72,6 +72,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Show Docker Services
+        run: |
+          docker ps -a    
+
+      - name: Test Ports
+        run: |
+          nc -zv localhost 5432 || true
+          nc -zv localhost 27017 || true
+          nc -zv localhost 7687 || true
+    
       - name: Wait For Services
         run: |
           python src/wait_for_services.py
