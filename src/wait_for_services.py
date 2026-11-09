@@ -32,7 +32,7 @@ def wait_mongo():
             print("MongoDB READY")
             return
         except Exception as ex:
-            print(f"f"MongoDB not ready: {ex}")
+            print(f"MongoDB not ready: {ex}")
             time.sleep(2)
     raise Exception("MongoDB timeout")
 
