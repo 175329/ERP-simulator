@@ -3,16 +3,25 @@
 ------------------------------------------------------
 
 INSERT INTO products
-(code,name)
+(
+    code,
+    name
+)
 VALUES
-('PC001','Gaming PC');
+(
+    'PC001',
+    'Gaming PC'
+);
 
 ------------------------------------------------------
 -- MATERIALES
 ------------------------------------------------------
 
 INSERT INTO materials
-(code,name)
+(
+    code,
+    name
+)
 VALUES
 ('CPU001','CPU Ryzen 7'),
 ('MB001','Motherboard B650'),
@@ -26,7 +35,10 @@ VALUES
 ------------------------------------------------------
 
 INSERT INTO inventory
-(material_id,stock)
+(
+    material_id,
+    stock
+)
 VALUES
 (1,50),
 (2,45),
@@ -40,20 +52,23 @@ VALUES
 ------------------------------------------------------
 
 INSERT INTO bill_of_materials
-(product_id,material_id,quantity_required)
+(
+    product_id,
+    material_id,
+    quantity_required
+)
 VALUES
-(1,1,1),   -- CPU
-(1,2,1),   -- Motherboard
-(1,3,2),   -- RAM
-(1,4,1),   -- SSD
-(1,5,1),   -- PSU
-(1,6,1);   -- GPU
+(1,1,1), -- CPU
+(1,2,1), -- Motherboard
+(1,3,2), -- RAM
+(1,4,1), -- SSD
+(1,5,1), -- PSU
+(1,6,1); -- GPU
 
 ------------------------------------------------------
--- ORDEN DE VENTA
+-- NOTA
 ------------------------------------------------------
-
-INSERT INTO sales_orders
-(product_id,quantity)
-VALUES
-(1,30);
+-- Las órdenes de venta NO se insertan aquí.
+-- Serán creadas dinámicamente por seed_data.py
+-- utilizando ORDER_QUANTITY.
+------------------------------------------------------
