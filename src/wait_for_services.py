@@ -16,7 +16,8 @@ def wait_postgres():
             conn.close()
             print("PostgreSQL READY")
             return
-        except Exception:
+        except Exception as ex:
+            print(f"PostgreSQL not ready: {ex}")
             time.sleep(2)
     raise Exception("PostgreSQL timeout")
 
@@ -30,7 +31,8 @@ def wait_mongo():
             client.admin.command("ping")
             print("MongoDB READY")
             return
-        except Exception:
+        except Exception as ex:
+            print(f"f"MongoDB not ready: {ex}")
             time.sleep(2)
     raise Exception("MongoDB timeout")
 
@@ -45,7 +47,8 @@ def wait_neo4j():
             driver.verify_connectivity()
             print("Neo4j READY")
             return
-        except Exception:
+        except Exception as ex:
+            print(f"Neo4j not ready: {ex}")
             time.sleep(2)
     raise Exception("Neo4j timeout")
 
