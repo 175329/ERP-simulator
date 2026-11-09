@@ -22,7 +22,7 @@ cursor = conn.cursor()
 # Cargar datos maestros
 # --------------------------------------------------
 
-with open("sql/seed.sql", "r", encoding="utf-8") as sql_file:
+with open("sql/seeds.sql", "r", encoding="utf-8") as sql_file:
 
     cursor.execute(sql_file.read())
 
