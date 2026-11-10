@@ -57,3 +57,46 @@ al mismo milisegundo.
 ID03 (Sincronización Contable): Todo movimiento de entrada o salida debe insertar 
 simultáneamente un registro en la tabla de inventario físico y en la tabla de Asientos Contables 
 (Journal Entries). Si uno de los dos falla, se debe hacer un rollback completo de la operación.
+
+
+```mermaid
+graph TD
+    %% Evento Inicial
+    Inicio((Inicio: Iniciar Transacción de Inventario)) --> ValidarTrazabilidad(Verificar Trazabilidad del Artículo)
+
+    %% Compuerta de Trazabilidad (RN02)
+    ValidarTrazabilidad --> GW\_Lote{¿Gestionado por Lotes?}
+    GW\_Lote -->|Sí| RegistroLote(Registrar Lote y Caducidad)
+    RegistroLote --> CalcATP
+    GW\_Lote -->|No| CalcATP(Calcular Disponibilidad Dinámica - ATP)
+
+    %% Actividad de Cálculo (RN01) y Compuerta
+    CalcATP --> GW\_ATP{¿ATP Positivo?}
+    GW\_ATP -->|No| Rechazo(Emitir advertencia de Backorder / Bloquear Salida)
+    Rechazo --> FinRechazo((Fin: Operación Detenida))
+
+    %% Integridad (ID02)
+    GW\_ATP -->|Sí| Bloqueo(Bloquear registro temporalmente - Concurrencia ACID)
+    Bloqueo --> InsercionInventario(Insertar registro en tabla de inventario físico)
+    InsercionInventario --> SincContable(Sincronización Contable)
+
+    %% Compuerta de Sincronización (ID03)
+    SincContable --> GW\_Sinc{¿Falla en asiento contable?}
+    GW\_Sinc -->|Sí| Rollback(Hacer rollback completo de la operación)
+    Rollback --> FinRechazo
+    GW\_Sinc -->|No| DocInmutable(Generar documento inmutable)
+
+    %% Evento Final (RN03)
+    DocInmutable --> FinExito((Fin: Movimiento Exitoso))
+
+    %% Asignación de Estilos BPMN
+    classDef eventoInicial fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    classDef eventoFinal fill:#f8d7da,stroke:#dc3545,stroke-width:3px;
+    classDef compuerta fill:#fff3cd,stroke:#ffc107,stroke-width:2px,shape:diamond;
+    classDef actividad fill:#e2e3e5,stroke:#6c757d,stroke-width:2px,rx:10,ry:10;
+
+    class Inicio eventoInicial;
+    class FinRechazo,FinExito eventoFinal;
+    class GW\_Lote,GW\_ATP,GW\_Sinc compuerta;
+    class ValidarTrazabilidad,RegistroLote,CalcATP,Rechazo,Bloqueo,InsercionInventario,SincContable,Rollback,DocInmutable actividad;
+```
