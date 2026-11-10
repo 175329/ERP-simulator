@@ -1,3 +1,4 @@
+```mermaid
 graph TD
     A[Inicio: Definición de Requerimientos y Reglas de Negocio] --> B[Registro de Recursos en SAP Business One]
     B --> C[Asignación de Calendarios, Horarios y Días No Laborables]
