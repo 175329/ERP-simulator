@@ -60,6 +60,7 @@ def create_indexes(session):
 
 
 def ingest_matches(session, df):
+    df = df.dropna(subset=["home_score", "away_score"])
     query = """
     UNWIND $batch AS row
     MERGE (m:Match {id: row.id})
