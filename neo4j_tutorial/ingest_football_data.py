@@ -1,4 +1,3 @@
-
 import os
 import logging
 
@@ -29,6 +28,20 @@ def load_data():
     return results_df, goalscorers_df, shootouts_df
 
 
+def make_match_id(row):
+    return (
+        f"{row['date'].strftime('%Y-%m-%d')}_"
+        f"{row['home_team']}_{row['away_team']}"
+    )
+
+
+def is_true(value):
+    if pd.isna(value):
+        return False
+
+    return str(value).strip().lower() in ("true", "1", "1.0")
+
+
 def create_indexes(session):
     indexes = [
         "CREATE INDEX IF NOT EXISTS FOR (t:Team) ON (t.name)",
@@ -43,20 +56,6 @@ def create_indexes(session):
         session.run(index)
 
     logger.info("Indexes created.")
-
-
-def make_match_id(row):
-    return (
-        f"{row['date'].strftime('%Y-%m-%d')}_"
-        f"{row['home_team']}_{row['away_team']}"
-    )
-
-
-def is_true(value):
-    if pd.isna(value):
-        return False
-
-    return str(value).strip().lower() in ("true", "1", "1.0")
 
 
 def ingest_matches(session, df):
@@ -137,17 +136,21 @@ def ingest_goals(session, df):
 
     MERGE (p)-[s:SCORED_FOR {
         match_id: row.id,
-        minute: row.minute,
-        own_goal: row.own_goal,
-        penalty: row.penalty
+        goal_index: row.goal_index
     }]->(t)
+
+    SET s.minute = row.minute,
+        s.own_goal = row.own_goal,
+        s.penalty = row.penalty
 
     MERGE (p)-[r:SCORED_IN {
         match_id: row.id,
-        minute: row.minute,
-        own_goal: row.own_goal,
-        penalty: row.penalty
+        goal_index: row.goal_index
     }]->(m)
+
+    SET r.minute = row.minute,
+        r.own_goal = row.own_goal,
+        r.penalty = row.penalty
     """
 
     for i in tqdm(range(0, len(df), BATCH_SIZE), desc="Ingesting goals"):
@@ -160,6 +163,7 @@ def ingest_goals(session, df):
 
             goal_data = {
                 "id": make_match_id(row),
+                "goal_index": int(row.name),
                 "scorer": (
                     str(row["scorer"])
                     if pd.notna(row["scorer"])
@@ -189,6 +193,7 @@ def ingest_shootouts(session, df):
     MATCH (w:Team {name: row.winner})
 
     MERGE (m)-[s:HAD_SHOOTOUT]->(w)
+
     SET s.winner = row.winner,
         s.first_shooter = row.first_shooter
     """
@@ -240,6 +245,7 @@ def main():
 
         with driver.session() as session:
             create_indexes(session)
+
             ingest_matches(session, results_df)
             ingest_goals(session, goalscorers_df)
             ingest_shootouts(session, shootouts_df)
@@ -252,4 +258,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
