@@ -6,7 +6,7 @@ on:
 
   push:
     branches:
-      - feature/184661
+      - feature/185393
     paths:
       - "neo4j_tutorial/**"
       - ".github/workflows/neo4j_tutorial.yml"
