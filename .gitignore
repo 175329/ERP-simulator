@@ -1,6 +1,8 @@
+# Ignorar credenciales
 .env
-.venv/
+**/.env
+
+# Ignorar archivos temporales de Python
 __pycache__/
 *.pyc
-resultados/*.json
-resultados/*.md
+.venv/
