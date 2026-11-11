@@ -1,46 +1,32 @@
-import pandas as pd
-import neo4j
-from dotenv import load_dotenv
+
 import os
-from tqdm import tqdm
 import logging
+
+import pandas as pd
+from dotenv import load_dotenv
+from neo4j import GraphDatabase
+from tqdm import tqdm
 
 # CSV file paths
 results_csv_path = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/results.csv"
 goalscorers_csv_path = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/goalscorers.csv"
 shootouts_csv_path = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/shootouts.csv"
 
-# Set up logging
+# Logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-logger.info("Loading data...")
-
-# Load data
-results_df = pd.read_csv(results_csv_path, parse_dates=["date"])
-goalscorers_df = pd.read_csv(goalscorers_csv_path, parse_dates=["date"])
-shootouts_df = pd.read_csv(shootouts_csv_path, parse_dates=["date"])
-
-# Set up Neo4j connection
-load_dotenv()
-
-uri = os.getenv("NEO4J_URI")
-user = os.getenv("NEO4J_USERNAME")
-password = os.getenv("NEO4J_PASSWORD")
-
-if not uri or not user or not password:
-    raise ValueError("Missing Neo4j credentials")
-
-driver = neo4j.GraphDatabase.driver(
-    uri,
-    auth=(user, password)
-)
-
-driver.verify_connectivity()
-
-print("Connected to Neo4j instance successfully!")
-
 BATCH_SIZE = 5000
+
+
+def load_data():
+    logger.info("Loading football data...")
+
+    results_df = pd.read_csv(results_csv_path, parse_dates=["date"])
+    goalscorers_df = pd.read_csv(goalscorers_csv_path, parse_dates=["date"])
+    shootouts_df = pd.read_csv(shootouts_csv_path, parse_dates=["date"])
+
+    return results_df, goalscorers_df, shootouts_df
 
 
 def create_indexes(session):
@@ -56,13 +42,29 @@ def create_indexes(session):
     for index in indexes:
         session.run(index)
 
-    print("Indexes created.")
+    logger.info("Indexes created.")
+
+
+def make_match_id(row):
+    return (
+        f"{row['date'].strftime('%Y-%m-%d')}_"
+        f"{row['home_team']}_{row['away_team']}"
+    )
+
+
+def is_true(value):
+    if pd.isna(value):
+        return False
+
+    return str(value).strip().lower() in ("true", "1", "1.0")
 
 
 def ingest_matches(session, df):
     df = df.dropna(subset=["home_score", "away_score"])
+
     query = """
     UNWIND $batch AS row
+
     MERGE (m:Match {id: row.id})
     SET m.date = date(row.date),
         m.home_score = row.home_score,
@@ -85,17 +87,17 @@ def ingest_matches(session, df):
          row.home_score AS hs,
          row.away_score AS awayScore
 
-    FOREACH(_ IN CASE WHEN hs > awayScore THEN [1] ELSE [] END |
+    FOREACH (_ IN CASE WHEN hs > awayScore THEN [1] ELSE [] END |
         MERGE (home)-[:WON]->(m)
         MERGE (away)-[:LOST]->(m)
     )
 
-    FOREACH(_ IN CASE WHEN hs < awayScore THEN [1] ELSE [] END |
+    FOREACH (_ IN CASE WHEN hs < awayScore THEN [1] ELSE [] END |
         MERGE (away)-[:WON]->(m)
         MERGE (home)-[:LOST]->(m)
     )
 
-    FOREACH(_ IN CASE WHEN hs = awayScore THEN [1] ELSE [] END |
+    FOREACH (_ IN CASE WHEN hs = awayScore THEN [1] ELSE [] END |
         MERGE (home)-[:DREW]->(m)
         MERGE (away)-[:DREW]->(m)
     )
@@ -107,11 +109,11 @@ def ingest_matches(session, df):
 
         for _, row in batch.iterrows():
             match_data = {
-                "id": f"{row['date'].strftime('%Y-%m-%d')}_{row['home_team']}_{row['away_team']}",
+                "id": make_match_id(row),
                 "date": row["date"].strftime("%Y-%m-%d"),
                 "home_score": int(row["home_score"]),
                 "away_score": int(row["away_score"]),
-                "neutral": bool(row["neutral"]),
+                "neutral": is_true(row["neutral"]),
                 "home_team": row["home_team"],
                 "away_team": row["away_team"],
                 "tournament": row["tournament"],
@@ -121,7 +123,8 @@ def ingest_matches(session, df):
 
             data.append(match_data)
 
-        session.run(query, batch=data)
+        if data:
+            session.run(query, batch=data)
 
 
 def ingest_goals(session, df):
@@ -152,28 +155,27 @@ def ingest_goals(session, df):
         data = []
 
         for _, row in batch.iterrows():
-            try:
-                goal_data = {
-                    "id": f"{row['date'].strftime('%Y-%m-%d')}_{row['home_team']}_{row['away_team']}",
-                    "scorer": (
-                        row["scorer"]
-                        if not pd.isna(row["scorer"])
-                        else "Unnamed Player"
-                    ),
-                    "team": row["team"],
-                    "minute": (
-                        float(row["minute"])
-                        if pd.notnull(row["minute"])
-                        else None
-                    ),
-                    "own_goal": bool(row["own_goal"]),
-                    "penalty": bool(row["penalty"]),
-                }
+            if pd.isna(row["date"]):
+                continue
 
-                data.append(goal_data)
+            goal_data = {
+                "id": make_match_id(row),
+                "scorer": (
+                    str(row["scorer"])
+                    if pd.notna(row["scorer"])
+                    else "Unnamed Player"
+                ),
+                "team": row["team"],
+                "minute": (
+                    float(row["minute"])
+                    if pd.notna(row["minute"])
+                    else None
+                ),
+                "own_goal": is_true(row["own_goal"]),
+                "penalty": is_true(row["penalty"]),
+            }
 
-            except Exception as e:
-                logger.error(f"Error processing row: {e}")
+            data.append(goal_data)
 
         if data:
             session.run(query, batch=data)
@@ -187,7 +189,6 @@ def ingest_shootouts(session, df):
     MATCH (w:Team {name: row.winner})
 
     MERGE (m)-[s:HAD_SHOOTOUT]->(w)
-
     SET s.winner = row.winner,
         s.first_shooter = row.first_shooter
     """
@@ -197,31 +198,53 @@ def ingest_shootouts(session, df):
         data = []
 
         for _, row in batch.iterrows():
+            if pd.isna(row["date"]):
+                continue
+
             shootout_data = {
-                "id": f"{row['date'].strftime('%Y-%m-%d')}_{row['home_team']}_{row['away_team']}",
+                "id": make_match_id(row),
                 "winner": row["winner"],
                 "first_shooter": (
                     row["first_shooter"]
-                    if pd.notnull(row["first_shooter"])
+                    if pd.notna(row["first_shooter"])
                     else None
                 ),
             }
 
             data.append(shootout_data)
 
-        session.run(query, batch=data)
+        if data:
+            session.run(query, batch=data)
 
 
 def main():
+    load_dotenv()
+
+    uri = os.getenv("NEO4J_URI")
+    username = os.getenv("NEO4J_USERNAME")
+    password = os.getenv("NEO4J_PASSWORD")
+
+    if not uri or not username or not password:
+        raise ValueError("Missing Neo4j credentials.")
+
+    results_df, goalscorers_df, shootouts_df = load_data()
+
+    driver = GraphDatabase.driver(
+        uri,
+        auth=(username, password)
+    )
+
     try:
+        driver.verify_connectivity()
+        logger.info("Connected to Neo4j Aura successfully!")
+
         with driver.session() as session:
             create_indexes(session)
-
             ingest_matches(session, results_df)
             ingest_goals(session, goalscorers_df)
             ingest_shootouts(session, shootouts_df)
 
-        print("Data ingestion completed!")
+        logger.info("Data ingestion completed successfully!")
 
     finally:
         driver.close()
@@ -229,3 +252,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
