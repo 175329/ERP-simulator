@@ -154,7 +154,3 @@ Algunas posibles ampliaciones son:
 - **Devoluciones:** Identificar productos devueltos y comprobar su relación con la compra original.
 - **Nuevas autorizaciones:** Permitir que un responsable apruebe cantidades superiores a las establecidas.
 - **Nuevos eventos:** Identificar el tipo de operación y aplicar las reglas correspondientes, sin depender de un solo evento.
-
-De esta manera, el agente podrá adaptarse a nuevos procesos sin modificar su objetivo principal: validar correctamente la recepción de productos antes de permitir su ingreso al inventario.
-
-> **Nota:** La tolerancia de 5 unidades es únicamente un ejemplo; debe sustituirse por el valor establecido en los requerimientos del ERP. Asimismo, los nombres de campos utilizados en Python son ilustrativos y deberán ajustarse a la estructura real de los eventos y tablas.
