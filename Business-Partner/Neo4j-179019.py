@@ -27,7 +27,7 @@ class Neo4jTutorialApp:
         print(f"[Creación] Relación creada: {nombre_persona} -> ACTED_IN -> {titulo_pelicula}")
 
     @staticmethod
-    def _tx_crear_tx(tx, nombre_persona, titulo_pelicula):
+    def _tx_crear_relacion(tx, nombre_persona, titulo_pelicula):
         query = """
         MERGE (p:Person {name: $nombre_persona})
         MERGE (m:Movie {title: $titulo_pelicula})
