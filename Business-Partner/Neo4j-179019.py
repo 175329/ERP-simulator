@@ -1,9 +1,9 @@
 from neo4j import GraphDatabase
 
 # 1. Configuración de la conexión a Neo4j (AuraDB o instancia local)
-URI = "neo4j+s://TU_INSTANCIA.databases.neo4j.io"
-USER = "neo4j"
-PASSWORD = "TU_PASSWORD_AQUI"
+URI = "neo4j+s://df9fda9e.databases.neo4j.io"
+USER = "df9fda9e"
+PASSWORD = "mXG14iVx4hLHiRrMhxiJpilGkEd5Ee-5sNcM4HGl0Ns"
 
 
 class Neo4jTutorialApp:
