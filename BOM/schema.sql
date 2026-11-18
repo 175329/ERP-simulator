@@ -79,3 +79,46 @@ CREATE TABLE bom_detalle (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_bom_componente UNIQUE (bom_id, component_sku)
 );
+
+CREATE TABLE ordenes_produccion (
+    orden_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    codigo_orden VARCHAR(50) NOT NULL UNIQUE,
+    parent_sku VARCHAR(50) NOT NULL REFERENCES articulos(sku) ON DELETE RESTRICT,
+    bom_id BIGINT NOT NULL REFERENCES bom_cabecera(bom_id) ON DELETE RESTRICT,
+    cantidad_requerida NUMERIC(14, 4) NOT NULL CHECK (cantidad_requerida > 0),
+    fecha_requerida DATE NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'PLANIFICADA' 
+        CHECK (estado IN ('PLANIFICADA', 'LIBERADA', 'EN_PROCESO', 'TERMINADA', 'CANCELADA')),
+    usuario_creacion VARCHAR(100) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orden_bom_snapshots (
+    snapshot_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    orden_id BIGINT NOT NULL REFERENCES ordenes_produccion(orden_id) ON DELETE CASCADE,
+    nivel INT NOT NULL CHECK (nivel >= 0),
+    sku_padre VARCHAR(50) NOT NULL,
+    sku_componente VARCHAR(50) NOT NULL,
+    version_bom VARCHAR(20) NOT NULL,
+    cantidad_neta NUMERIC(14, 4) NOT NULL,
+    cantidad_bruta NUMERIC(14, 4) NOT NULL,
+    scrap_aplicado NUMERIC(5, 4) NOT NULL,
+    uom_id VARCHAR(10) NOT NULL,
+    costo_unitario_historico NUMERIC(14, 4) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- AUDITORIA --
+
+CREATE TABLE auditoria_bom (
+    auditoria_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    entidad_afectada VARCHAR(50) NOT NULL,
+    registro_id VARCHAR(50) NOT NULL,
+    accion VARCHAR(10) NOT NULL CHECK (accion IN ('INSERT', 'UPDATE', 'DELETE')),
+    usuario VARCHAR(100) NOT NULL DEFAULT CURRENT_USER,
+    fecha_hora TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    valores_anteriores JSONB NULL,
+    valores_nuevos JSONB NULL,
+    direccion_ip INET NULL
+);
