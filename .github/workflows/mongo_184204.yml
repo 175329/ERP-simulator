@@ -1,0 +1,41 @@
+name: Carga MongoDB - Alexis (184204)
+
+on:
+  push:
+    branches:
+      - creature/184204
+  workflow_dispatch:
+
+jobs:
+  cargar-mongodb:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar MongoDB Database Tools
+        run: |
+          wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
+          sudo apt-get install -y ./mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
+
+      - name: Cargar archivos JSON de AR&AP en MongoDB
+        run: |
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/Eventos AR&AP ISA95.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/Eventos AR&AP ISA95.json"
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/ISA 95.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/ISA 95.json"
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/messages 181779.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/messages 181779.json"
+
+      - name: Verificar colección en MongoDB
+        run: |
+          mongosh --host localhost --port 27017 erpdb --eval "print('Total documentos en AR_AP:', db.AR_AP.countDocuments()); printjson(db.AR_AP.find().toArray());"
