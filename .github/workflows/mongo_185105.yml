@@ -11,7 +11,7 @@ jobs:
   cargar-mongo:
     runs-on: ubuntu-latest
 
-    # 1. "arrancar MongoDB"
+    
     services:
       mongodb:
         image: mongo:7.0
@@ -33,7 +33,7 @@ jobs:
       wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
       sudo dpkg -i mongodb-database-tools-*.deb
 
-      # 2 y 3. "leer los archivos .json de la carpeta item" y "Crear colección"
+      
       - name: Importar JSONs a colección item
         run: |
           echo "Buscando archivos JSON en la carpeta item..."
