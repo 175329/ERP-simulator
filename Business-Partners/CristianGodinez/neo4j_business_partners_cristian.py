@@ -6,7 +6,7 @@ mediante MERGE; no elimina nodos ni toca inventarios o materiales de otros.
 import argparse
 import os
 
-from src.business_partner_events_cristian import load_catalog, project_events
+from .business_partner_events_cristian import load_catalog, project_events
 
 
 SCOPE = "CristianGodinez-ERP-BP-2026"

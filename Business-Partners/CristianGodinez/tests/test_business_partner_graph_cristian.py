@@ -1,6 +1,6 @@
 """Pruebas de consultas Cypher del modelo Business Partners, sin Neo4j externo."""
-from src.business_partner_events_cristian import load_catalog
-from src.neo4j_business_partners_cristian import (
+from ..business_partner_events_cristian import load_catalog
+from ..neo4j_business_partners_cristian import (
     ADDRESS_QUERY,
     BP_QUERY,
     CONTACT_QUERY,

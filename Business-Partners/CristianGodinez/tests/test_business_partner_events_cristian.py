@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import pytest
 
-from src.business_partner_events_cristian import (
+from ..business_partner_events_cristian import (
     BPValidationError,
     decide_document,
     load_catalog,

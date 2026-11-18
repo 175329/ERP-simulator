@@ -9,11 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-DEFAULT_CATALOG = (
-    Path(__file__).resolve().parents[1]
-    / "Business-Partner"
-    / "CristianGodinez_BP_events.json"
-)
+DEFAULT_CATALOG = Path(__file__).resolve().parents[1] / "CristianGodinez_BP_events.json"
+
 
 PARTNER_TYPES = {"C", "V", "L"}
 CURRENCIES = {"MXN", "USD", "EUR"}
