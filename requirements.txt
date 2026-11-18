@@ -9,7 +9,6 @@ Pygments==2.21.0
 pymongo==4.19.0
 pytest==9.2.0
 pytz==2026.6
-=======
 psycopg2-binary
 pymongo
 pytest
