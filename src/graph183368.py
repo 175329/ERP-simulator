@@ -1,16 +1,14 @@
 import os
 from neo4j import GraphDatabase
 
-# Conexión basada en las variables de entorno del flujo init.yml
 uri = f"bolt://{os.getenv('NEO4J_HOST', 'localhost')}:{os.getenv('NEO4J_PORT', '7687')}"
 user = os.getenv('NEO4J_USER', 'neo4j')
 password = os.getenv('NEO4J_PASSWORD', 'password')
 order_quantity = int(os.getenv('ORDER_QUANTITY', '30'))
 
 def create_ar_ap_graph(tx, qty):
-    # Cálculo de montos financieros basados en la orden de Gaming PCs
-    total_receivable = qty * 1800.00  # Total Cuentas por Cobrar (AR)
-    total_payable = qty * 1150.00     # Total Cuentas por Pagar (AP)
+    total_receivable = qty * 1800.00  
+    total_payable = qty * 1150.00
 
     query = """
     // 1. Cuentas por Cobrar (AR): Cliente, Orden de Venta y Factura
