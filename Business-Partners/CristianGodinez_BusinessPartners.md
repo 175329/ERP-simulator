@@ -11,19 +11,19 @@
 
 Mi equipo trabaja el módulo **Business Partners (socios de negocio)**, basado en conceptos de SAP Business One. Esta entrega **individual** implementa un flujo de datos maestros de clientes, proveedores y prospectos, con controles para contactos, direcciones, condiciones comerciales, crédito, bloqueos y conversión de clientes potenciales.
 
-La primera versión de esta aportación se integró en el [PR #91](https://github.com/jesusrevilla/ERP-simulator/pull/91). La implementación, el catálogo y las pruebas se encuentran juntos en esta carpeta. El [documento histórico de requisitos](https://github.com/jesusrevilla/ERP-simulator/blob/841b9b10f0c25e8cc675573d6c19d38532127726/Business-Partner/BusinessPartner.md) describe el alcance del módulo.
+La primera versión de esta aportación se integró en el [PR #91](https://github.com/jesusrevilla/ERP-simulator/pull/91). El catálogo está junto a esta guía. La implementación y las pruebas se encuentran en [CristianGodinez](CristianGodinez/). El [documento de requisitos](BusinessPartner.md) describe el alcance del módulo.
 
 ### Avances del equipo del 9 al 15 de noviembre de 2026
 
 | Avance | Relación con esta aportación |
 |---|---|
-| [Flujo de socios de negocio y MRP](../business-partners.md) | El flujo propone filtrar socios inactivos o bloqueados. El validador aplica ese control a órdenes de compra y de venta simuladas. |
-| [Reglas de proveedores](../sql/supplier_rules.sql) | PostgreSQL guarda el proveedor preferente, el plazo de entrega, el mínimo de compra (MOQ) y el múltiplo de pedido por material. La prueba de compra de esta aportación cubre la elegibilidad del proveedor. |
-| [Recomendaciones de MRP](../sql/mrp_recommendations.sql) | PostgreSQL define cantidad sugerida, fecha de liberación, estado, precio y acuerdo comercial por recomendación. La conexión pendiente consiste en vincular `supplier_code` con el `CardCode` de un proveedor y aplicar sus reglas antes de aprobar la orden. |
-| [Catálogo de actividades ISA-95](../177301-ISA95-BP.json) | El equipo documentó actividades de cliente, proveedor, maquilador y operador logístico. El catálogo de esta carpeta reproduce una secuencia de eventos de un proveedor y de un prospecto que se convierte en cliente. |
-| [Versión histórica del tutorial Neo4j de Ulises](https://github.com/jesusrevilla/ERP-simulator/blob/841b9b10f0c25e8cc675573d6c19d38532127726/Business-Partner/Neo4j-179019.py) | Su ejemplo muestra operaciones básicas de Neo4j con personas y películas. Esta aportación usa un grafo de socios, direcciones, contactos y eventos. |
+| [Flujo de socios de negocio y MRP](business-partners.md) | El flujo propone filtrar socios inactivos o bloqueados. El validador aplica ese control a órdenes de compra y de venta simuladas. |
+| [Reglas de proveedores](sql/supplier_rules.sql) | PostgreSQL guarda el proveedor preferente, el plazo de entrega, el mínimo de compra (MOQ) y el múltiplo de pedido por material. La prueba de compra de esta aportación cubre la elegibilidad del proveedor. |
+| [Recomendaciones de MRP](sql/mrp_recommendations.sql) | PostgreSQL define cantidad sugerida, fecha de liberación, estado, precio y acuerdo comercial por recomendación. La conexión pendiente consiste en vincular `supplier_code` con el `CardCode` de un proveedor y aplicar sus reglas antes de aprobar la orden. |
+| [Catálogo de actividades ISA-95](177301-ISA95-BP.json) | El equipo documentó actividades de cliente, proveedor, maquilador y operador logístico. El catálogo de esta carpeta reproduce una secuencia de eventos de un proveedor y de un prospecto que se convierte en cliente. |
+| [Tutorial Neo4j de Ulises](Neo4j-179019.py) | Su ejemplo muestra operaciones básicas de Neo4j con personas y películas. Esta aportación usa un grafo de socios, direcciones, contactos y eventos. |
 
-La [retroalimentación del equipo](../sql/retroalimentacion_BP.md) pide enfocar el desarrollo en atributos propios del socio. Además del vínculo con MRP, quedan por definir la integración de certificados de análisis del proveedor y la trazabilidad de pedidos y ventanas de entrega del cliente. Esta entrega ejecuta el ciclo del socio con datos simulados y lo proyecta a Neo4j.
+La [retroalimentación del equipo](sql/retroalimentacion_BP.md) pide enfocar el desarrollo en atributos propios del socio. Además del vínculo con MRP, quedan por definir la integración de certificados de análisis del proveedor y la trazabilidad de pedidos y ventanas de entrega del cliente. Esta entrega ejecuta el ciclo del socio con datos simulados y lo proyecta a Neo4j.
 
 ## 2. Alcance funcional del módulo
 
@@ -77,7 +77,7 @@ Los nombres, correos con dominio `example.test` y claves fiscales con prefijo `S
 
 ## 5. Catálogo de eventos
 
-**Ruta:** `Business-Partners/CristianGodinez/CristianGodinez_BP_events.json`
+**Ruta:** `Business-Partners/CristianGodinez_BP_events.json`
 
 Se incluyen **22 eventos** con:
 

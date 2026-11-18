@@ -43,8 +43,8 @@ graph TD
 
 En el escenario de Business Partners, el validador consulta el estado del socio antes de autorizar una orden simulada. Para compras requiere un proveedor activo y habilitado para compras. Para ventas requiere un cliente activo, habilitado para ventas y con crédito disponible. En ambos casos verifica la moneda y registra el motivo de cada rechazo.
 
-- [Guía de requisitos y escenarios](CristianGodinez/CristianGodinez_BusinessPartners.md)
-- [Catálogo de 22 eventos de socios](CristianGodinez/CristianGodinez_BP_events.json)
+- [Guía de requisitos y escenarios](CristianGodinez_BusinessPartners.md)
+- [Catálogo de 22 eventos de socios](CristianGodinez_BP_events.json)
 - [Validador en Python](CristianGodinez/business_partner_events_cristian.py), [demo en Neo4j](CristianGodinez/neo4j_business_partners_cristian.py) y [pruebas](CristianGodinez/tests)
 
 Para aplicar esta validación a las [recomendaciones de MRP](sql/mrp_recommendations.sql), queda pendiente vincular `supplier_code` con el `CardCode` del socio antes de convertir una recomendación en orden de compra.

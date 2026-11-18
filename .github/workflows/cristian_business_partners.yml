@@ -7,12 +7,14 @@ on:
       - feature/consolidar-business-partners
     paths:
       - "Business-Partners/CristianGodinez/**"
+      - "Business-Partners/CristianGodinez_BP_events.json"
       - ".github/workflows/cristian_business_partners.yml"
   pull_request:
     branches:
       - development
     paths:
       - "Business-Partners/CristianGodinez/**"
+      - "Business-Partners/CristianGodinez_BP_events.json"
       - ".github/workflows/cristian_business_partners.yml"
   workflow_dispatch:
 
