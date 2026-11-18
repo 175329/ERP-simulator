@@ -6,16 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 1. Llamar ci.yml (arrancar MongoDB) según instrucción del pizarrón
-  arrancar-mongo:
-    uses: ./.github/workflows/ci.yml
-
-  # 2. Leer archivos .json y crear colección
   cargar-rutas-mongo:
-    needs: arrancar-mongo
     runs-on: ubuntu-latest
 
-    # Failsafe: Aseguramos que MongoDB esté disponible en este job para la importación
+    # Levantamos MongoDB de forma independiente en el runner
     services:
       mongodb:
         image: mongo:latest
