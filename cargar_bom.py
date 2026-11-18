@@ -11,7 +11,7 @@ def cargar_eventos_bom():
     
     coleccion_bom = db["BOM"]
     
-    archivos_json = glob.glob("**/BOM/*.json", recursive=True)
+    archivos_json = glob.glob("BOM/*.json")
     
     if not archivos_json:
         print("No se encontraron archivos .json en la carpeta BOM.")
