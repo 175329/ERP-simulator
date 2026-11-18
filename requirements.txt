@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 dnspython==2.9.2
 iniconfig==2.3.1
 neo4j==6.4.1
@@ -15,4 +15,4 @@ pymongo
 pytest
 neo4j>=5.0.0
 python-dotenv>=1.0.0
->>>>>>> 7592fc5f26fe73f534c79e50330f9d255aa9948b
+7592fc5f26fe73f534c79e50330f9d255aa9948b
