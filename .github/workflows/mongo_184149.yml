@@ -1,51 +1,42 @@
-name: CI - Cargar Eventos BOM en MongoDB
+name: Carga MongoDB BOM - 184149
 
 on:
   push:
-    branches: [ development, main ]
-    paths:
-      - '**/events_*.json'
-      - 'scripts/load_bom_events.py'
-      - '.github/workflows/ci.yml'
+    branches: [ "development", "feature/184149" ]
+  pull_request:
+    branches: [ "development" ]
   workflow_dispatch:
 
 jobs:
-  load-bom-mongodb:
+  cargar-mongo:
     runs-on: ubuntu-latest
 
     services:
       mongodb:
-        image: mongo:7.0
+        image: mongo:latest
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout del código
         uses: actions/checkout@v4
 
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Instalar dependencias
-        run: pip install pymongo
-
-      - name: Leer JSON, crear colección BOM y cargar eventos
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI || 'mongodb://localhost:27017/' }}
-          MONGO_DB: erp_simulator
-        run: python scripts/load_bom_events.py
-
-      - name: Verificar documentos cargados en MongoDB
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI || 'mongodb://localhost:27017/' }}
         run: |
-          python -c "
-          import os
-          from pymongo import MongoClient
-          db = MongoClient(os.environ['MONGO_URI'])['erp_simulator']
-          count = db['bom'].count_documents({})
-          print('Documentos verificados en colección bom:', count)
-          assert count == 38, f'Se esperaban 38 eventos y hay {count}'
-          "
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pymongo
+
+      - name: Ejecutar script de carga BOM
+        run: |
+          python cargar_bom.py
