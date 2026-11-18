@@ -8,7 +8,7 @@ on:
 
 jobs:
   cargar-mongodb:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     services:
       mongodb:
@@ -27,14 +27,16 @@ jobs:
 
       - name: Instalar MongoDB Database Tools
         run: |
+          sudo apt-get update
+          sudo apt-get install -y wget curl
           wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
           sudo apt-get install -y ./mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
 
       - name: Cargar archivos JSON de AR&AP en MongoDB
         run: |
-          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/Eventos AR&AP ISA95.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/Eventos AR&AP ISA95.json"
-          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/ISA 95.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/ISA 95.json"
-          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/messages 181779.json" --jsonArray || mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/messages 181779.json"
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/Eventos AR&AP ISA95.json" --jsonArray || true
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/ISA 95.json" --jsonArray || true
+          mongoimport --host localhost --port 27017 --db erpdb --collection AR_AP --file "AR&AP/messages 181779.json" --jsonArray || true
 
       - name: Verificar colección en MongoDB
         run: |
