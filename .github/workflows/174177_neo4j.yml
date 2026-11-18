@@ -1,12 +1,6 @@
 name: 174177 - Neo4j ERP Tutorial
 
 on:
-  push:
-    branches:
-      - feature/174177
-    paths:
-      - "src/neo4j_174177.py"
-      - ".github/workflows/174177_neo4j.yml"
   workflow_dispatch:
     inputs:
       order_quantity:
