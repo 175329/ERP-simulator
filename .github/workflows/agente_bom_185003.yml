@@ -1,0 +1,63 @@
+name: IA Agent - BOM Guardian Graph
+
+on:
+  workflow_dispatch:
+
+jobs:
+ 
+  call-ci-database:
+    uses: ./.github/workflows/ci.yml
+
+ 
+  enviar-grafo-bom:
+    needs: call-ci-database
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias del Agente
+        run: pip install neo4j
+
+      - name: Enviar Grafo de IA (Detección de Ciclos en BOM)
+        run: |
+          cat << 'EOF' > agente_bom.py
+          from neo4j import GraphDatabase
+
+          
+          URI = "bolt://localhost:7687"
+          AUTH = ("neo4j", "password")
+
+          with GraphDatabase.driver(URI, auth=AUTH) as driver:
+              with driver.session() as session:
+                  print("Iniciando inyección del Grafo de IA (Estructura BOM)...")
+                  
+                  # Construcción del grafo de materiales de la Gaming PC
+                  session.run("""
+                      MERGE (pc:Product {name: 'Gaming PC'})
+                      MERGE (mb:Component {name: 'Motherboard B650'})
+                      MERGE (cpu:Component {name: 'CPU Ryzen 7'})
+                      MERGE (pc)-[:REQUIRES]->(mb)
+                      MERGE (mb)-[:REQUIRES]->(cpu)
+                  """)
+                  print("Grafo BOM inyectado exitosamente en Neo4j.")
+                  
+                  # Consulta del Agente IA para detectar ciclos infinitos
+                  result = session.run("""
+                      MATCH path = (n)-[:REQUIRES*]->(n)
+                      RETURN path LIMIT 1
+                  """)
+                  
+                  if result.single():
+                      print("ALERTA DE IA: ¡Ciclo infinito detectado en la estructura BOM! Un componente no puede requerirse a sí mismo.")
+                  else:
+                      print("Validación IA exitosa: La estructura es un Grafo Acíclico Dirigido (DAG) validado.")
+          EOF
+          
+          python agente_bom.py
