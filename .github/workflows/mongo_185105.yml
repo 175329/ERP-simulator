@@ -28,9 +28,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instalar Mongo Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mongo-tools
+      run: |
+      echo "Descargando herramientas oficiales de MongoDB..."
+      wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.9.4.deb
+      sudo dpkg -i mongodb-database-tools-*.deb
 
       # 2 y 3. "leer los archivos .json de la carpeta item" y "Crear colección"
       - name: Importar JSONs a colección item
