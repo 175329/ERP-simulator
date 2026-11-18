@@ -1,0 +1,60 @@
+name: IA Agent - CSP Assembly Graph
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-ci-database:
+    uses: ./.github/workflows/ci.yml
+
+  enviar-grafo-agente:
+    needs: call-ci-database
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias del Agente
+        run: pip install neo4j
+
+      - name: Enviar Grafo de IA (Problema de Satisfacción de Restricciones - CSP)
+        run: |
+          cat << 'EOF' > agente_csp.py
+          from neo4j import GraphDatabase
+
+          # Intentamos conectar al puerto que abrió el ci.yml
+          URI = "bolt://localhost:7687"
+          AUTH = ("neo4j", "password")
+
+          with GraphDatabase.driver(URI, auth=AUTH) as driver:
+              with driver.session() as session:
+                  print("Iniciando inyección del Grafo de IA (Restricciones de Ensamblaje CSP)...")
+                  
+                  # Construcción del grafo de dependencias lógicas
+                  session.run("""
+                      MERGE (mb:Task {name: 'Instalar Motherboard', id: 'EVT-ASM-004'})
+                      MERGE (psu:Task {name: 'Fijar Power Supply', id: 'EVT-ASM-003'})
+                      MERGE (cpu:Task {name: 'Instalar CPU', id: 'EVT-ASM-001'})
+                      MERGE (cpu)-[:MUST_PRECEDE]->(mb)
+                      MERGE (psu)-[:MUST_PRECEDE]->(mb)
+                  """)
+                  print("Grafo CSP inyectado exitosamente en Neo4j.")
+                  
+                  # Consulta del Agente IA para verificar el flujo
+                  result = session.run("""
+                      MATCH (t1:Task)-[:MUST_PRECEDE]->(t2:Task)
+                      RETURN t1.name AS PreRequisito, t2.name AS TareaSiguiente
+                  """)
+                  
+                  print("Reglas lógicas registradas en la base de datos:")
+                  for record in result:
+                      print(f" -> {record['PreRequisito']} DEBE IR ANTES DE {record['TareaSiguiente']}")
+          EOF
+          
+          python agente_csp.py
