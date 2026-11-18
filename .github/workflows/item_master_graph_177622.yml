@@ -6,6 +6,10 @@ on:
         description: "Cantidad de Gaming PCs a fabricar"
         required: true
         default: "30"
+  push:
+    paths:
+      - ".github/workflows/item_master_graph_177622.yml"
+      - "src/item_master_graph_177622.py"
   pull_request:
     paths:
       - ".github/workflows/item_master_graph_177622.yml"
