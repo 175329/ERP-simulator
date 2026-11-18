@@ -16,6 +16,7 @@ def conectar_bd():
     )
 
 
+
 def buscar_articulo(codigo):
     conexion = conectar_bd()
     cursor = conexion.cursor()

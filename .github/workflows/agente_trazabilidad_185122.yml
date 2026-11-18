@@ -12,7 +12,7 @@ on:
 jobs:
   trazabilidad:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -56,6 +56,7 @@ jobs:
 
       MONGO_HOST: localhost
       MONGO_PORT: 27017
+      MONGO_DB: erpdb
 
       NEO4J_HOST: localhost
       NEO4J_PORT: 7687
@@ -91,6 +92,202 @@ jobs:
         run: |
           python src/seed_data.py
 
+      - name: Create Collection and Load Transaction Integrity JSON
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from pymongo import MongoClient
+
+          # MongoDB connection
+          client = MongoClient(
+              host=os.getenv("MONGO_HOST", "localhost"),
+              port=int(os.getenv("MONGO_PORT", "27017")),
+              serverSelectionTimeoutMS=10000
+          )
+
+          client.admin.command("ping")
+
+          db = client[os.getenv("MONGO_DB", "erpdb")]
+          collection_name = "integridad_transacciones"
+
+          # Create collection if it does not exist
+          if collection_name not in db.list_collection_names():
+              db.create_collection(collection_name)
+
+          collection = db[collection_name]
+
+          print("Collection ready:", collection_name)
+
+          # JSON files directory
+          json_folder = Path("Integridad_de_las_transacciones")
+
+          if not json_folder.exists():
+              raise FileNotFoundError(
+                  f"Directory not found: {json_folder}"
+              )
+
+          json_files = sorted(json_folder.glob("*.json"))
+
+          if not json_files:
+              raise FileNotFoundError(
+                  "No JSON files found."
+              )
+
+          # Identify event objects from different JSON formats
+          def is_event(data):
+              return (
+                  ("id" in data and "evento" in data)
+                  or (
+                      "event_id" in data
+                      and (
+                          "event_type" in data
+                          or "event_name" in data
+                      )
+                  )
+              )
+
+          # Recursively extract events from nested structures
+          def extract_events(data, path=""):
+              if isinstance(data, dict):
+
+                  if is_event(data):
+                      yield data, path
+                      return
+
+                  for key, value in data.items():
+                      new_path = (
+                          f"{path}.{key}" if path else key
+                      )
+                      yield from extract_events(value, new_path)
+
+              elif isinstance(data, list):
+                  for index, item in enumerate(data):
+                      new_path = f"{path}[{index}]"
+                      yield from extract_events(item, new_path)
+
+          # Preserve general metadata without duplicating event arrays
+          def get_metadata(data):
+              metadata = dict(data)
+
+              metadata.pop("jerarquia", None)
+              metadata.pop("events", None)
+              metadata.pop("event_sequence", None)
+
+              if isinstance(
+                  metadata.get("mrp_transaction_integrity_module"),
+                  dict
+              ):
+                  module = dict(
+                      metadata["mrp_transaction_integrity_module"]
+                  )
+                  module.pop("events", None)
+                  metadata["mrp_transaction_integrity_module"] = module
+
+              return metadata
+
+          total_events = 0
+          total_transactions = 0
+
+          # Process all JSON files
+          for file_path in json_files:
+
+              print(f"Reading: {file_path.name}")
+
+              with open(
+                  file_path, "r", encoding="utf-8"
+              ) as json_file:
+                  data = json.load(json_file)
+
+              # Store complete MRP transaction
+              if (
+                  isinstance(data, dict)
+                  and "TransactionHeader" in data
+              ):
+                  header = data["TransactionHeader"]
+
+                  transaction_id = header.get(
+                      "TransactionID", file_path.name
+                  )
+
+                  document = {
+                      "_id": f"{file_path.name}:{transaction_id}",
+                      "tipo_documento": "transaccion",
+                      "archivo_origen": file_path.name,
+                      "transaction_id": transaction_id,
+                      "datos": data
+                  }
+
+                  collection.replace_one(
+                      {"_id": document["_id"]},
+                      document,
+                      upsert=True
+                  )
+
+                  total_transactions += 1
+
+                  print(
+                      f"Transaction loaded: {transaction_id}"
+                  )
+
+                  continue
+
+              # Extract and store individual events
+              metadata = get_metadata(data)
+              file_events = 0
+
+              for event, source_path in extract_events(data):
+
+                  event_id = (
+                      event.get("event_id")
+                      or event.get("id")
+                  )
+
+                  if not event_id:
+                      raise ValueError(
+                          f"Event without ID in {file_path.name}"
+                      )
+
+                  document = dict(event)
+
+                  document["_id"] = (
+                      f"{file_path.name}:{event_id}"
+                  )
+                  document["event_id"] = event_id
+                  document["tipo_documento"] = "evento"
+                  document["archivo_origen"] = file_path.name
+                  document["ruta_origen"] = source_path
+                  document["metadata_origen"] = metadata
+
+                  collection.replace_one(
+                      {"_id": document["_id"]},
+                      document,
+                      upsert=True
+                  )
+
+                  total_events += 1
+                  file_events += 1
+
+              print(
+                  f"Events loaded from {file_path.name}: "
+                  f"{file_events}"
+              )
+
+          print("--------------------------------")
+          print("TRANSACTION INTEGRITY LOAD COMPLETED")
+          print("Collection:", collection_name)
+          print("Events loaded:", total_events)
+          print("Transactions loaded:", total_transactions)
+          print(
+              "Total documents:",
+              total_events + total_transactions
+          )
+          print("--------------------------------")
+
+          client.close()
+          PY
+
       - name: Run Traceability Agent
         run: |
-          python recibos_y_entregas/agente_trazabilidad.py
+          python Recibos_y_entregas/agente_trazabilidad.py
