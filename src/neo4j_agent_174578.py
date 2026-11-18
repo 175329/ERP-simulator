@@ -1,19 +1,3 @@
-"""
-Pipeline Grafo Neo4j -> Agente IA -> Resolución del grafo.
-
-Usa lo que ya existe en el repo:
-  - src/neo4j_load.py              (grafo Product -[:REQUIRES]-> Material, SalesOrder -[:FOR]-> Product)
-  - src/neo4j_shortages.py         (faltantes calculados con Cypher)
-  - Algoritmo_LeadTime_LLM_Orchestrator   (agentes CrewAI: ERP, MES y Auditor)
-  - Lead Time/173030Lead_Time_Materiales_Productos_Internos.json  (tiempos de abastecimiento/producción)
-
-Etapas (se llaman desde .github/workflows/neo4j-agent-resolve.yml):
-  python -m src.neo4j_agent_resolve context   -> arma el JSON de MRP desde el grafo
-  python -m src.neo4j_agent_resolve agent     -> el agente IA analiza ese JSON
-  python -m src.neo4j_agent_resolve resolve   -> crea órdenes de compra en el grafo y repone faltantes
-  python -m src.neo4j_agent_resolve report    -> resumen con diagrama en GitHub Actions
-"""
-
 import importlib.util
 import json
 import os
@@ -38,7 +22,6 @@ RESOLVE_FILE = os.path.join(OUT_DIR, "resolucion.json")
 
 
 def _read_shortages(driver):
-    """Faltantes del grafo (consulta de src/neo4j_shortages.py) + código de material."""
     with driver.session() as session:
         rows = session.execute_read(shortages)
         codes = {
@@ -63,9 +46,6 @@ def _read_json(path):
         return json.load(f)
 
 
-# ----------------------------------------------------------------------------
-# 1. Contexto: grafo -> JSON con el formato que espera el orquestador
-# ----------------------------------------------------------------------------
 def build_context():
     lead_time = _read_json(LEAD_TIME_JSON)
     driver = get_driver()
@@ -114,9 +94,6 @@ def build_context():
               f"req={m['cantidad_requerida']:<5} {estado}")
 
 
-# ----------------------------------------------------------------------------
-# 2. Agente IA: LeadTime LLM Orchestrator con los datos reales del grafo
-# ----------------------------------------------------------------------------
 def run_agent():
     context = _read_json(CONTEXT_FILE)
 
@@ -128,13 +105,13 @@ def run_agent():
             f.write(f"> {msg}\n")
         return
 
-    # El archivo del orquestador no tiene extensión .py, se carga a mano
+
     loader = SourceFileLoader("leadtime_orchestrator", ORCHESTRATOR_FILE)
     spec = importlib.util.spec_from_loader(loader.name, loader)
     orchestrator = importlib.util.module_from_spec(spec)
     loader.exec_module(orchestrator)
 
-    # En lugar del JSON fijo, el agente recibe lo que sale del grafo
+
     orchestrator.cargar_json_mrp = lambda: json.dumps(context, ensure_ascii=False)
 
     result = orchestrator.LeadTime_LLM_Orchestrator()
@@ -146,9 +123,6 @@ def run_agent():
     print(text)
 
 
-# ----------------------------------------------------------------------------
-# 3. Resolver el grafo: orden de compra por faltante y reposición de stock
-# ----------------------------------------------------------------------------
 def resolve():
     context = _read_json(CONTEXT_FILE)
     agent_text = open(AGENT_FILE, encoding="utf-8").read() if os.path.exists(AGENT_FILE) else ""
@@ -185,7 +159,7 @@ def resolve():
                 ordered=ordered_at.isoformat(), received=received_at.isoformat(),
             )
 
-        # El análisis del agente queda guardado en el grafo, ligado a la orden
+
         session.run(
             """
             MERGE (a:AgentReport {id: $id})
@@ -226,9 +200,6 @@ def resolve():
     print("Grafo resuelto: ningún material con faltante.")
 
 
-# ----------------------------------------------------------------------------
-# 4. Reporte para la página del run en GitHub Actions
-# ----------------------------------------------------------------------------
 def report():
     context = _read_json(CONTEXT_FILE)
     res = _read_json(RESOLVE_FILE)
