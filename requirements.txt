@@ -1,4 +1,3 @@
-
 dnspython==2.9.2
 iniconfig==2.3.1
 neo4j==6.4.1
@@ -9,9 +8,4 @@ Pygments==2.21.0
 pymongo==4.19.0
 pytest==9.2.0
 pytz==2026.6
-psycopg2-binary
-pymongo
-pytest
-neo4j>=5.0.0
 python-dotenv>=1.0.0
-7592fc5f26fe73f534c79e50330f9d255aa9948b
