@@ -118,3 +118,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           pytest -vv
+
+      - name: Contributor Stats
+        run: |
+          git shortlog -s -n --all          
