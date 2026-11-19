@@ -1,49 +1,70 @@
-# 🧪 Prueba Funcional: Gestión de Almacenes (Warehouses) en MRP
+# Prueba Funcional: Gestión de Almacenes (Warehouses) y MRP
 
-**Equipo:** Módulo de Almacenes (*Warehouses*)  
-**Módulo ERP:** Planificación de Requerimientos de Materiales (MRP) / Gestión de Inventarios  
-**Artículo de Prueba:** `A50009` (*J.B. Officeprint 5000*)  
-**Escenario MRP:** `Q2_A5_2026`  
-
----
-
-## 📋 Descripción de la Prueba Funcional
-
-### **Ejecución de MRP por Almacén Específico vs. Consolidado (Multi-almacén)**
-
-**Objetivo:**  
-Validar que el Asistente de MRP discrimine correctamente la disponibilidad de inventario físico, oferta y demanda según la configuración de ejecución (*Por Almacén* vs. *Consolidado por Empresa*), asegurando que no se asuma disponibilidad errónea de stock ubicado en almacenes excluidos o independientes.
+## Identificación de la Prueba
+* **ID de Prueba:** `PF-WH-01`
+* **Módulo:** Almacenes (`Warehouses`) & Planificación de Requerimientos (`MRP`)
+* **Empresa:** TechAssembly S.A.
+* **Producto Evaluado:** Gaming PC (Ensamble) y sus componentes
 
 ---
 
-## ⚙️ Precondiciones y Datos de Entrada
-
-1. **Configuración de Almacenes:**
-   * **Almacén `01` (General Warehouse / Producción):** Stock físico inicial = `0 unidades`.
-   * **Almacén `02` (Backup Warehouse / Central):** Stock físico inicial = `50 unidades` del artículo `A50009`.
-   * **Almacén `03` (Drop Ship):** Excluido de la planificación estándar.
-2. **Demanda Activa:**
-   * Se registra una **Orden de Venta** (o Pronóstico `PSF1`) por `20 unidades` del artículo `A50009` con fecha de entrega dentro del horizonte (`26/10/2026` – `27/10/2026`), asignada exclusivamente al **Almacén `01`**.
-3. **Configuración del Escenario (`Q2_A5_2026`):**
-   * En el **Paso 4 (*Inventory Data Source*)** del Asistente de MRP, la opción de ejecución (*Run By*) debe estar configurada en **Warehouse** (*Incluir inventario, demanda y suministro por separado para cada almacén*).
+## Objetivo
+Validar que el motor MRP del simulador ERP consulte y calcule correctamente la disponibilidad de stock por almacén en **PostgreSQL**, respete la estructura de componentes (BOM) en **Neo4j**, registre el historial/auditoría en **MongoDB** y genere recomendaciones de compra únicamente para los almacenes seleccionados y habilitados para MRP.
 
 ---
 
-## 🚀 Pasos de Ejecución
+## Precondiciones (Datos Semilla)
+Antes de ejecutar la validación, el esquema ERP (`seed`) debe contar con la siguiente configuración en **PostgreSQL** y **Neo4j**:
 
-1. Ingresar al módulo **MRP > MRP Wizard** y seleccionar el escenario `Q2_A5_2026`.
-2. Verificar en el **Paso 2** que el horizonte de planificación comprenda del `26/10/2026` al `27/10/2026`.
-3. Confirmar en el **Paso 3** que el criterio de selección filtre el artículo `A50009`.
-4. En el **Paso 4 (*Inventory Data Source*)**:
-   * Seleccionar el radio button **Warehouse**.
-   * Marcar las casillas *Include Existing Inventory*, *Include Demand* e *Include Supply* **únicamente** para el **Almacén `01`** (dejando desmarcado el Almacén `02`).
-5. En el **Paso 5 (*Documents Data Source*)**, incluir Órdenes de Venta y el Pronóstico `PSF1`, seleccionando generar recomendaciones hacia el almacén con la demanda (*Generate to Warehouse with the Demand*).
-6. Hacer clic en **Run** para ejecutar el cálculo y revisar los resultados en el **Paso 6**.
+1. **Almacenes configurados:**
+   * **`WH-PROD` (Almacén de Ensamble / Producción):** Habilitado para MRP (`include_in_mrp = True`).
+   * **`WH-CENT` (Almacén Central):** Habilitado para MRP (`include_in_mrp = True`).
+   * **`WH-QUAR` (Almacén de Cuarentena / RMA):** Excluido de MRP (`include_in_mrp = False`).
+
+2. **Inventario inicial de componentes (para ensamble de *Gaming PC*):**
+
+| Componente | `WH-PROD` (Ensamble) | `WH-CENT` (Central) | `WH-QUAR` (Cuarentena) |
+| :--- | :---: | :---: | :---: |
+| **CPU Ryzen 7** | `0` | `10` | `5` |
+| **Motherboard B650** | `2` | `8` | `0` |
+| **RAM 16GB DDR5** | `4` | `20` | `2` |
+| **SSD 1TB NVMe** | `0` | `15` | `0` |
+| **Power Supply 750W** | `1` | `12` | `0` |
+| **Graphics Card RTX** | `0` | `5` | `3` |
+
+3. **Demanda registrada:** Una Orden de Venta activa por **`5` unidades de `Gaming PC`** asignada al almacén de salida **`WH-PROD`**.
 
 ---
 
-## ✅ Resultado Esperado (Criterios de Aceptación)
+## Pasos de Ejecución
 
-* **En la pestaña *Report* (Paso 6):** El sistema debe mostrar un *Initial Inventory* de `0` para el Almacén `01`, ignorando las `50 unidades` almacenadas en el Almacén `02`. El balance proyectado debe reflejar un déficit de `-20 unidades`.
-* **En la pestaña *Recommendations* (Paso 6):** El MRP debe generar una recomendación de **Orden de Compra** (*Purchase Order*) por `20 unidades` del artículo `A50009` dirigidas específicamente al **Almacén `01`** (o sugerir una Solicitud de Traslado desde el Almacén `02` si las reglas de reabastecimiento interno están activas).
-* **Prueba de Contraste (Validación Negativa):** Si se repite la ejecución cambiando el parámetro a **Company** (Consolidado) e incluyendo ambos almacenes, el sistema deberá cubrir la demanda de `20 unidades` con el stock del Almacén `02` y **no** generar ninguna orden de compra externa.
+### Escenario A: Corrida de MRP aislada por Almacén (`WH-PROD`)
+1. Iniciar el cálculo de MRP seleccionando el producto terminado **`Gaming PC`**.
+2. Configurar el alcance de inventario en modo **Por Almacén (`Run by Warehouse`)** filtrando exclusivamente **`WH-PROD`**.
+3. Ejecutar el algoritmo de explosión de materiales (BOM desde **Neo4j**) y cruce de inventario (desde **PostgreSQL**).
+4. Inspeccionar las recomendaciones de abastecimiento generadas y el log de ejecución en **MongoDB**.
+
+### Escenario B: Corrida de MRP Consolidada (`WH-PROD` + `WH-CENT`)
+1. Ejecutar nuevamente el cálculo de MRP para las mismas **`5` unidades de `Gaming PC`**.
+2. Configurar el alcance de inventario en modo **Consolidado (`Run by Company`)**, incluyendo todos los almacenes activos (`include_in_mrp = True`).
+3. Verificar el cálculo de necesidades netas y el aislamiento del almacén **`WH-QUAR`**.
+
+---
+
+## Resultados Esperados (Criterios de Aceptación)
+
+### 1. En el Escenario A (Aislamiento en `WH-PROD`):
+* El sistema ignora las existencias de `WH-CENT` y `WH-QUAR`.
+* Se generan las siguientes **Recomendaciones de Compra** con destino a **`WH-PROD`**:
+  * **CPU Ryzen 7:** `5` unidades (Stock: 0).
+  * **Motherboard B650:** `3` unidades (Demanda: 5 - Stock: 2).
+  * **RAM 16GB DDR5:** `1` unidad (Demanda: 5 - Stock: 4).
+  * **SSD 1TB NVMe:** `5` unidades (Stock: 0).
+  * **Power Supply 750W:** `4` unidades (Demanda: 5 - Stock: 1).
+  * **Graphics Card RTX:** `5` unidades (Stock: 0).
+
+### 2. En el Escenario B (Consolidado `WH-PROD` + `WH-CENT`):
+* El sistema suma el stock disponible entre `WH-PROD` y `WH-CENT` (ej. *CPU Ryzen 7*: `0 + 10 = 10` disponibles; *Graphics Card RTX*: `0 + 5 = 5` disponibles).
+* **No se generan recomendaciones de compra**, ya que el inventario consolidado cubre las `5` *Gaming PC*.
+* El stock de **`WH-QUAR`** (ej. las 3 *Graphics Card RTX* dañadas) permanece intacto y excluido del cálculo.
+* **Integridad y Automatización:** La ejecución registra el documento de resultados en **MongoDB** y pasa la validación automática mediante `pytest` dentro del workflow de **GitHub Actions**.
