@@ -5,6 +5,14 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 
 > **Alcance:** esta prueba verifica la explosión y las cantidades brutas proporcionadas por BOM. El descuento de existencias, reservas y suministros en tránsito corresponde a la integración con inventarios/MRP y no se considera validado por esta prueba aislada.
 
+## Integrantes del equipo
+
+| Matrícula | Nombre completo |
+|---|---|
+| 181914 | Yael Quintanilla Ramírez |
+| 179761 | ______________________________ |
+| 182934 | ______________________________ |
+
 ## Identificación
 - **ID:** PF-BOM-004
 - **Módulo:** Bill of Materials (BOM)
