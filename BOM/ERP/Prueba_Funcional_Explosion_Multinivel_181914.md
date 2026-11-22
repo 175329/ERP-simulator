@@ -46,7 +46,7 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 2. Crear y aprobar la BOM de KIT_REFRIGERACION con 1 DISIPADOR y 2 VENTILADORES por kit.
 3. Crear y aprobar la BOM de PC con 1 TARJETA_MADRE, 2 MEMORIAS_RAM, 1 GABINETE y 1 KIT_REFRIGERACION por computadora.
 4. Ingresar al módulo de planeación o al endpoint de explosión de BOM.
-5. Solicitar la explosión de **10 MESAS** para la fecha de demanda indicada.
+5. Solicitar la explosión de **10 computadoras PC** para la fecha de demanda indicada.
 6. Consultar el árbol de componentes y el detalle de cantidades calculadas.
 7. Verificar las versiones de BOM utilizadas en PC y KIT_REFRIGERACION.
 8. Comparar los resultados con la tabla de resultados esperados y registrar evidencia.
@@ -76,7 +76,7 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 
 ## Evidencia a registrar
 - Captura o respuesta de API de las BOM aprobadas y sus versiones.
-- Captura o respuesta de API de la demanda de 10 MESAS.
+- Captura o respuesta de API de la demanda de 10 computadoras PC.
 - Árbol de explosión y tabla de necesidades brutas resultantes.
 - Fecha de ejecución, versión/commit del sistema, usuario de prueba, resultado observado y estado final.
 
