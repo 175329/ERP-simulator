@@ -22,8 +22,8 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 - **Estado:** Pendiente de ejecución
 
 ## Precondiciones
-1. Existen artículos activos MESA (fabricable), KIT (fabricable), TABLERO, PATA y TORNILLO (componentes de compra).
-2. Las BOM de MESA y KIT están aprobadas y vigentes en la fecha de la demanda; no contienen ciclos.
+1. Existen artículos activos PC (computadora ensamblada, fabricable), KIT_REFRIGERACION (subensamble fabricable), TARJETA_MADRE, MEMORIA_RAM, GABINETE, DISIPADOR y VENTILADOR (componentes de compra).
+2. Las BOM de PC y KIT_REFRIGERACION están aprobadas y vigentes en la fecha de la demanda; no contienen ciclos.
 3. La cantidad base de ambas BOM es **1 pieza**; todas las cantidades se expresan en piezas y no hay merma.
 4. El usuario de planeación tiene permisos para consultar y explotar las BOM.
 5. Se utiliza un ambiente de pruebas con datos controlados, sin modificar órdenes reales.
@@ -32,35 +32,39 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 
 | Nivel | Artículo padre | Componente | Cantidad por 1 padre | Tipo |
 |---|---|---|---:|---|
-| 0 → 1 | MESA | TABLERO | 1 | Materia prima |
-| 0 → 1 | MESA | PATA | 4 | Materia prima |
-| 0 → 1 | MESA | KIT | 1 | Subensamble |
-| 1 → 2 | KIT | TORNILLO | 8 | Materia prima |
+| 0 → 1 | PC | TARJETA_MADRE | 1 | Componente de compra |
+| 0 → 1 | PC | MEMORIA_RAM | 2 | Componente de compra |
+| 0 → 1 | PC | GABINETE | 1 | Componente de compra |
+| 0 → 1 | PC | KIT_REFRIGERACION | 1 | Subensamble |
+| 1 → 2 | KIT_REFRIGERACION | DISIPADOR | 1 | Componente de compra |
+| 1 → 2 | KIT_REFRIGERACION | VENTILADOR | 2 | Componente de compra |
 
-**Demanda:** 10 MESAS, con fecha dentro de la vigencia de ambas BOM.
+**Demanda:** 10 computadoras PC, con fecha dentro de la vigencia de ambas BOM.
 
 ## Procedimiento
-1. Registrar o verificar los cinco artículos en el catálogo.
-2. Crear y aprobar la BOM de KIT con 8 TORNILLOS por KIT.
-3. Crear y aprobar la BOM de MESA con 1 TABLERO, 4 PATAS y 1 KIT por MESA.
+1. Registrar o verificar los siete artículos en el catálogo.
+2. Crear y aprobar la BOM de KIT_REFRIGERACION con 1 DISIPADOR y 2 VENTILADORES por kit.
+3. Crear y aprobar la BOM de PC con 1 TARJETA_MADRE, 2 MEMORIAS_RAM, 1 GABINETE y 1 KIT_REFRIGERACION por computadora.
 4. Ingresar al módulo de planeación o al endpoint de explosión de BOM.
 5. Solicitar la explosión de **10 MESAS** para la fecha de demanda indicada.
 6. Consultar el árbol de componentes y el detalle de cantidades calculadas.
-7. Verificar las versiones de BOM utilizadas en MESA y KIT.
+7. Verificar las versiones de BOM utilizadas en PC y KIT_REFRIGERACION.
 8. Comparar los resultados con la tabla de resultados esperados y registrar evidencia.
 
 ## Resultados esperados
 
 | Artículo | Cálculo | Necesidad bruta esperada |
 |---|---|---:|
-| TABLERO | 10 × 1 | **10 piezas** |
-| PATA | 10 × 4 | **40 piezas** |
-| KIT | 10 × 1 | **10 piezas (subensamble)** |
-| TORNILLO | 10 × 1 × 8 | **80 piezas** |
+| TARJETA_MADRE | 10 × 1 | **10 piezas** |
+| MEMORIA_RAM | 10 × 2 | **20 piezas** |
+| GABINETE | 10 × 1 | **10 piezas** |
+| KIT_REFRIGERACION | 10 × 1 | **10 piezas (subensamble)** |
+| DISIPADOR | 10 × 1 × 1 | **10 piezas** |
+| VENTILADOR | 10 × 1 × 2 | **20 piezas** |
 
-- El sistema representa correctamente los niveles MESA → KIT → TORNILLO.
-- KIT se identifica como subensamble y **no se suma como materia prima final** junto a sus TORNILLOS.
-- Las necesidades brutas de los materiales hoja son 10 TABLEROS, 40 PATAS y 80 TORNILLOS.
+- El sistema representa correctamente los niveles PC → KIT_REFRIGERACION → DISIPADOR/VENTILADOR.
+- KIT_REFRIGERACION se identifica como subensamble y **no se suma como materia prima final** junto a sus DISIPADORES y VENTILADORES.
+- Las necesidades brutas de los materiales hoja son 10 TARJETAS_MADRE, 20 MEMORIAS_RAM, 10 GABINETES, 10 DISIPADORES y 20 VENTILADORES.
 - El cálculo emplea únicamente versiones aprobadas y vigentes en la fecha de demanda.
 - No se duplican componentes ni se omiten niveles de la estructura.
 - Si un material aparece en varias ramas, sus cantidades se acumulan antes del redondeo final.
