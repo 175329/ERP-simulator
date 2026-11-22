@@ -9,9 +9,9 @@ Validar que el módulo BOM entregue correctamente la estructura multinivel y las
 
 | Matrícula | Nombre completo |
 |---|---|
+| 182934 | Bryan Yareth Gámez Contreras |
+| 179761 | Coral Jazmín Domínguez García |
 | 181914 | Yael Quintanilla Ramírez |
-| 179761 | ______________________________ |
-| 182934 | ______________________________ |
 
 ## Identificación
 - **ID:** PF-BOM-004
